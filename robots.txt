@@ -1,1 +1,1 @@
-Sitemap: https://rabraham.github.io/myblog/sitemap.xml
+Sitemap: https:/blog.rajivabraham.com/myblog/sitemap.xml
