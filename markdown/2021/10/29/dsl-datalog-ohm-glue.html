@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>A toy Datalog interpreter using Ohm and Glue. | fastpages</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="A toy Datalog interpreter using Ohm and Glue." />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A toy Datalog interpreter using Ohm interpreter and Glue." />
+<meta property="og:description" content="A toy Datalog interpreter using Ohm interpreter and Glue." />
+<link rel="canonical" href="https://rajivabraham.com/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html" />
+<meta property="og:url" content="https://rajivabraham.com/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html" />
+<meta property="og:site_name" content="fastpages" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-10-29T00:00:00-05:00" />
+<script type="application/ld+json">
+{"datePublished":"2021-10-29T00:00:00-05:00","url":"https://rajivabraham.com/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html","@type":"BlogPosting","headline":"A toy Datalog interpreter using Ohm and Glue.","dateModified":"2021-10-29T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://rajivabraham.com/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html"},"description":"A toy Datalog interpreter using Ohm interpreter and Glue.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/myblog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://rajivabraham.com/myblog/feed.xml" title="fastpages" /><link rel="shortcut icon" type="image/x-icon" href="/myblog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/myblog/">fastpages</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/myblog/about/">About Me</a><a class="page-link" href="/myblog/search/">Search</a><a class="page-link" href="/myblog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A toy Datalog interpreter using Ohm and Glue.</h1><p class="page-description">A toy Datalog interpreter using Ohm interpreter and Glue.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-10-29T00:00:00-05:00" itemprop="datePublished">
+        Oct 29, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      13 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/myblog/categories/#markdown">markdown</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#objective">Objective</a></li>
+<li class="toc-entry toc-h1"><a href="#motivation">Motivation</a></li>
+<li class="toc-entry toc-h1"><a href="#problem-statement">Problem Statement</a></li>
+<li class="toc-entry toc-h1"><a href="#compiling">Compiling</a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#creating-a-parse-tree">Creating a Parse Tree</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#glue">Glue</a></li>
+<li class="toc-entry toc-h1"><a href="#code-generation">Code Generation</a></li>
+<li class="toc-entry toc-h1"><a href="#summary">Summary</a></li>
+<li class="toc-entry toc-h1"><a href="#extra">Extra.</a></li>
+</ul><h1 id="objective">
+<a class="anchor" href="#objective" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objective</h1>
+<p>This post shows you how to create a toy Datalog, a laughably incomplete subset of the Datalog language, using an Ohm parser for syntax and a Glue parser for the semantics. The final output is a Python program.</p>
+
+<h1 id="motivation">
+<a class="anchor" href="#motivation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Motivation</h1>
+<p>I think the time has come for me to explore creating domain specific languages(DSLs)(raj: link) to build software systems. I feel the benefits are:</p>
+<ul>
+  <li>write less code. I hope to generate the required code from the DSL code</li>
+  <li>write executable code in that DSL that looks very similar to what an end user/domain expert would understand. Almost like writing English with some structure so that it can be executed. This will allow us to have great communication with domain experts/end users very early in the project preventing miscommunication errors.</li>
+  <li>Capture the business rules/business workflows at the level of the DSLs. This will allow me to easily change the implementation underneath without having to change the DSL code that captures the complex business logic. (raj: give example and elaborate)</li>
+</ul>
+
+<p>I hope to write a bigger post later explaining why I think DSLs are something worth exploring(raj: link to dsl motivation post when ready)</p>
+
+<h1 id="problem-statement">
+<a class="anchor" href="#problem-statement" aria-hidden="true"><span class="octicon octicon-link"></span></a>Problem Statement</h1>
+<p>I have a library in Python, 
+called <code class="language-plaintext highlighter-rouge">mercylog</code>(raj: link) 
+that is like Datalog. In this 
+post, I want to take actual 
+Datalog code and compile it to 
+Python code which has <code class="language-plaintext highlighter-rouge">mercylog</code> 
+statements. Let’s go further into 
+what that means.</p>
+
+<p>I’m first going to show how to express the example in SQL as all of us are familiar with it. Imagine a database with tables <code class="language-plaintext highlighter-rouge">parent</code>, <code class="language-plaintext highlighter-rouge">man</code> and <code class="language-plaintext highlighter-rouge">woman</code>.</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">parent</span> <span class="p">(</span>
+	<span class="n">name</span> <span class="nb">varchar</span><span class="p">,</span>
+	<span class="n">child</span> <span class="nb">varchar</span> 
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">man</span> <span class="p">(</span>
+    <span class="n">name</span> <span class="nb">varchar</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">woman</span> <span class="p">(</span>
+    <span class="n">name</span> <span class="nb">varchar</span>
+<span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">parent</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span>
+<span class="k">VALUES</span>
+    <span class="p">(</span><span class="s1">'abe'</span><span class="p">,</span> <span class="s1">'bob'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'abby'</span><span class="p">,</span> <span class="s1">'bob'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'bob'</span><span class="p">,</span> <span class="s1">'carl'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'bob'</span><span class="p">,</span> <span class="s1">'connor'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'beatrice'</span><span class="p">,</span> <span class="s1">'carl'</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">man</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="k">VALUES</span>
+    <span class="p">(</span><span class="s1">'abe'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'bob'</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">woman</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="k">VALUES</span>
+    <span class="p">(</span><span class="s1">'abby'</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'beatrice'</span><span class="p">);</span>
+
+<span class="cm">/* Query. Find Fathers */</span>
+<span class="k">select</span> <span class="n">man</span><span class="p">.</span><span class="n">name</span> <span class="k">as</span> <span class="n">father</span><span class="p">,</span> <span class="n">parent</span><span class="p">.</span><span class="n">child</span> <span class="k">from</span> <span class="n">man</span> <span class="k">inner</span> <span class="k">join</span> <span class="n">parent</span> <span class="k">ON</span> <span class="n">man</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">parent</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+
+<span class="cm">/* Pasting the query result here as well */</span>
+
+<span class="n">name</span>  <span class="n">child</span>
+<span class="c1">-----------  </span>
+<span class="n">bob</span>   <span class="n">carl</span>  
+<span class="n">bob</span>   <span class="n">connor</span>  
+<span class="n">abe</span>   <span class="n">bob</span>  
+</code></pre></div></div>
+
+<p>Now, I really like a language called Datalog(raj: link to datalog wiki and your article explaining Datalog). It’s an alternative to SQL. I even wrote a prototype Python library named mercylog(raj: link to mercylog) to be able to execute Datalog like programs in Python.</p>
+
+<p>Let’s translate the above SQL to a simple variant of Datalog.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>parent(abe, bob).
+parent(abby, bob).
+parent(bob, carl).
+parent(bob, connor).
+parent(beatrice, carl).
+man(abe).
+man(bob).
+woman(abby).
+woman(beatrice). &lt;=========== This and above are facts
+father(X, Y) :- man(X), parent(X, Y). &lt;============ This is a rule
+father(X, Y).  &lt;============= This is my query. Should be same result as SQL
+
+X       Y 
+-----------  
+bob   carl  
+bob   connor  
+abe   bob  
+</code></pre></div></div>
+
+<p>In Datalog, rows in a table are called facts. <code class="language-plaintext highlighter-rouge">X</code> and <code class="language-plaintext highlighter-rouge">Y</code> are special logic variables which are different from our regular Python variables(check raj: your introductory Datalog post).   <code class="language-plaintext highlighter-rouge">parent</code>, <code class="language-plaintext highlighter-rouge">man</code>, <code class="language-plaintext highlighter-rouge">woman</code> are called <code class="language-plaintext highlighter-rouge">relation</code>s just as in regular databases. Code is written as <code class="language-plaintext highlighter-rouge">rule</code>s. You can read the rule above as ‘X is a father of Y if X is man and X is the parent of Y’. The query is find me father and child combinations i.e. <code class="language-plaintext highlighter-rouge">father(X, Y)</code></p>
+
+<p>Note the schema creation step and explicit columns names(i.e. <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">child</code> for <code class="language-plaintext highlighter-rouge">parent</code>) are missing in this simplistic example of a Datalog variant(there are many of them). This is not saying that oh look, Datalog has so less code than SQL so it’s better. In fact the opposite, I want explicit schema creation etc. in Datalog but that’s another project(or checkout logica. raj: link to logica).</p>
+
+<p>Now, I have a prototype Python library called <code class="language-plaintext highlighter-rouge">mercylog</code>. Similar code there would be</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">mercylog</span> <span class="kn">import</span> <span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">db</span>
+<span class="c1"># Some mercylog helper functions to define variables(V) and Relations(R)
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="n">X</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="n">Y</span>
+<span class="n">parent</span> <span class="o">=</span> <span class="n">R</span><span class="p">.</span><span class="n">parent</span>
+<span class="n">man</span> <span class="o">=</span> <span class="n">R</span><span class="p">.</span><span class="n">man</span>
+<span class="n">woman</span> <span class="o">=</span> <span class="n">R</span><span class="p">.</span><span class="n">woman</span>
+<span class="n">father</span> <span class="o">=</span> <span class="n">R</span><span class="p">.</span><span class="n">father</span>
+
+<span class="c1"># Let's define the data and rules and query in a single list. 
+</span><span class="n">facts_rules_query</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">parent</span><span class="p">(</span><span class="s">"abe"</span><span class="p">,</span> <span class="s">"bob"</span><span class="p">),</span>
+    <span class="n">parent</span><span class="p">(</span><span class="s">"abby"</span><span class="p">,</span> <span class="s">"bob"</span><span class="p">),</span>
+    <span class="n">parent</span><span class="p">(</span><span class="s">"bob"</span><span class="p">,</span> <span class="s">"carl"</span><span class="p">),</span>
+    <span class="n">parent</span><span class="p">(</span><span class="s">"bob"</span><span class="p">,</span> <span class="s">"connor"</span><span class="p">),</span>
+    <span class="n">parent</span><span class="p">(</span><span class="s">"beatrice"</span><span class="p">,</span> <span class="s">"carl"</span><span class="p">),</span>
+    <span class="n">man</span><span class="p">(</span><span class="s">"abe"</span><span class="p">),</span>
+    <span class="n">man</span><span class="p">(</span><span class="s">"bob"</span><span class="p">),</span>
+    <span class="n">woman</span><span class="p">(</span><span class="s">"abby"</span><span class="p">),</span>
+    <span class="n">woman</span><span class="p">(</span><span class="s">"beatrice"</span><span class="p">),</span>
+    <span class="n">father</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">and_</span><span class="p">(</span><span class="n">man</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">parent</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)),</span> <span class="c1"># rule
+</span>    <span class="n">father</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">),</span> <span class="c1"># query
+</span><span class="p">]</span> 
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">db</span><span class="p">()</span> <span class="c1"># Create an in memory database
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">ds</span><span class="p">(</span><span class="n">facts_rules_query</span><span class="p">)</span> <span class="c1"># Execute the query
+</span><span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">df</span><span class="p">())</span> 
+
+
+<span class="c1"># Result of above print statement
+</span>
+     <span class="n">X</span>       <span class="n">Y</span>
+<span class="mi">0</span>  <span class="n">bob</span>  <span class="n">connor</span>
+<span class="mi">1</span>  <span class="n">bob</span>    <span class="n">carl</span>
+<span class="mi">2</span>  <span class="n">abe</span>     <span class="n">bob</span>
+
+
+</code></pre></div></div>
+
+<h1 id="compiling">
+<a class="anchor" href="#compiling" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling</h1>
+<p>The two ‘simple’ stages of 
+creating a compiler are:</p>
+
+<p>a) Creating a Parse Tree: writing a grammar to take raw text and convert that into a parse tree(raj: https://en.wikipedia.org/wiki/Parse_tree).
+(raj: Also put a picture of parse tree maybe even the one from https://en.wikipedia.org/wiki/Parse_tree, directly in the post). For this, we will use Ohm(raj: link)</p>
+
+<p>b) Assigning Semantics to Parse Tree: Taking the parse tree from the above phase and assigning some meaning to it. i.e. generating code that executes. In our case, we’ll be generating Python code. We could use Ohm for this too but I’ll use a tool called Glue(raj: link) created by Paul Tarvydas</p>
+
+<p>NOTE: Glue is very very much a prototype. It can fail across many edge cases. If this interests you, Paul is looking for programmers who can help him build out his vision.</p>
+
+<h2 id="creating-a-parse-tree">
+<a class="anchor" href="#creating-a-parse-tree" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating a Parse Tree</h2>
+
+<p>Alright, time for the meat. We build the grammar for our toy Datalog. Ohm has an excellent grammar editor(raj: link ohm editor) which allows one to write a grammar, test it with examples and see the ‘concrete syntax tree’ i.e. how a concrete example of Datalog code breaks out into a parse tree.</p>
+
+<p>(raj: Screenshot of Ohm Editor)</p>
+
+<p>Let’s start with the smallest Ohm grammar</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>datalog <span class="o">{</span>
+ Program <span class="o">=</span> Statement+
+<span class="o">}</span>
+</code></pre></div></div>
+<p>This is just saying that my 
+Datalog code is a <code class="language-plaintext highlighter-rouge">Program</code> with one or more ‘Statement’s. The <code class="language-plaintext highlighter-rouge">+</code> indicates one or more.</p>
+
+<p>What’s a <code class="language-plaintext highlighter-rouge">Statement</code>? Well, in 
+the simplest case, we have a 
+fact, e.g. <code class="language-plaintext highlighter-rouge">parent(abe, bob).</code> and 
+then we have a rule e.g. <code class="language-plaintext highlighter-rouge">father
+(X, Y) :- man(X), parent(X, Y).</code>.
+I see a sub pattern as <code class="language-plaintext highlighter-rouge">relation
+(Variable1, Variable2)</code>. I’ll 
+call this a 
+<code class="language-plaintext highlighter-rouge">Clause</code> and then I’ll worry later what’s in it. So the rule becomes <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause.</code> or even <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause, Clause..</code>. We have to capture the pattern <code class="language-plaintext highlighter-rouge">, Clause</code> 0 or many times. The way we do it in Ohm is like this.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Statement <span class="o">=</span>
+    Clause <span class="s2">"."</span>                          <span class="nt">--</span> fact
+  | Clause <span class="s2">":-"</span> Clause CommaClause<span class="k">*</span> <span class="s2">"."</span> <span class="nt">--</span> rule
+
+CommaClause <span class="o">=</span> <span class="s2">","</span> Clause
+</code></pre></div></div>
+<p>(raj: explain if – is a comment 
+for now?)
+(raj: Excalibur drawing?)</p>
+
+<p>Cool, what’s a Clause? It’s like <code class="language-plaintext highlighter-rouge">relation(Variable1, Variable2,..,VariableN)</code>. I’m going to worry about the ‘variable’ number of variables later. For now, I’ll call it</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Clause <span class="o">=</span> Relation <span class="s2">"("</span> IDList <span class="s2">")"</span>
+</code></pre></div></div>
+
+<p>Ok, What’s <code class="language-plaintext highlighter-rouge">Relation</code>? It’s a 
+lower case string e.g. <code class="language-plaintext highlighter-rouge">father</code> 
+and it has to start with a lower 
+case letter(Datalog Convention). We 
+need to capture single letter 
+relations e.g <code class="language-plaintext highlighter-rouge">a</code> in <code class="language-plaintext highlighter-rouge">a(X,Y)</code> or 
+bigger relations e.g. <code class="language-plaintext highlighter-rouge">father</code></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Relation <span class="o">=</span> LowerCaseIdent
+LowerCaseIdent <span class="o">=</span> <span class="s2">"a"</span> .. <span class="s2">"z"</span> identRest<span class="k">*</span>
+identRest <span class="o">=</span> <span class="s2">"0-9"</span> | <span class="s2">"_"</span> | <span class="s2">"A"</span> .. <span class="s2">"Z"</span> | <span class="s2">"a"</span> .. <span class="s2">"z"</span>
+</code></pre></div></div>
+<p><code class="language-plaintext highlighter-rouge">identRest</code> captures the pattern 
+that the rest of the identifier can 
+can either 
+be a number,
+underscore or upper case or lower case letters.</p>
+
+<p>Now, <code class="language-plaintext highlighter-rouge">IDList</code>. You’ll notice a trend here with CommaClause and IDList. It has the same feeling like designing functions. Often, I’ll write pseudocode on how I want a function to look and I’ll design the subroutines without actually implementing them. Just the subroutine calls. Once I like what I see, I’ll then go ahead and implement each subroutine. It feels similar here.</p>
+
+<p><code class="language-plaintext highlighter-rouge">IDList</code> has the same feel like <code class="language-plaintext highlighter-rouge">Clause</code>, doesn’t it?</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>IDList <span class="o">=</span> ID CommaID<span class="k">*</span>
+CommaID <span class="o">=</span> <span class="s2">","</span> ID
+</code></pre></div></div>
+
+<p>An <code class="language-plaintext highlighter-rouge">ID</code> is going to be either a 
+literal(or constant) like <code class="language-plaintext highlighter-rouge">abe</code>
+in <code class="language-plaintext highlighter-rouge">man(abe)</code> or a variable 
+like <code class="language-plaintext highlighter-rouge">X</code> and <code class="language-plaintext highlighter-rouge">Y</code> in <code class="language-plaintext highlighter-rouge">father(X, Y)
+</code>. A 
+variable starts with a capital 
+letter as per Datalog convention.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+ID <span class="o">=</span> Variable | Literal
+Variable <span class="o">=</span> CapitalizedIdent
+Literal <span class="o">=</span> LowerCaseIdent 
+<span class="c">#LowerCaseIdent  and identRest were already explained before</span>
+CapitalizedIdent <span class="o">=</span> <span class="s2">"A"</span> .. <span class="s2">"Z"</span> identRest<span class="k">*</span>
+
+</code></pre></div></div>
+
+<p>So there you go, I think that’s 
+it. Let’s see the whole ohm 
+grammar file.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>datalog <span class="o">{</span>
+Program <span class="o">=</span> Statement+
+Statement <span class="o">=</span>
+    Clause <span class="s2">"."</span>                          <span class="nt">--</span> fact
+  | Clause <span class="s2">":-"</span> Clause CommaClause<span class="k">*</span> <span class="s2">"."</span> <span class="nt">--</span> rule
+
+Clause <span class="o">=</span> Relation <span class="s2">"("</span> IDList <span class="s2">")"</span>
+CommaClause <span class="o">=</span> <span class="s2">","</span> Clause
+
+Relation <span class="o">=</span> LowerCaseIdent
+IDList <span class="o">=</span> ID CommaID<span class="k">*</span>
+ID <span class="o">=</span> Variable | Literal
+CommaID <span class="o">=</span> <span class="s2">","</span> ID
+
+Variable <span class="o">=</span> CapitalizedIdent
+Literal <span class="o">=</span> LowerCaseIdent
+
+LowerCaseIdent <span class="o">=</span> <span class="s2">"a"</span> .. <span class="s2">"z"</span> identRest<span class="k">*</span>
+CapitalizedIdent <span class="o">=</span> <span class="s2">"A"</span> .. <span class="s2">"Z"</span> identRest<span class="k">*</span>
+
+identRest <span class="o">=</span> <span class="s2">"0-9"</span> | <span class="s2">"_"</span> | <span class="s2">"A"</span> .. <span class="s2">"Z"</span> | <span class="s2">"a"</span> .. <span class="s2">"z"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h1 id="glue">
+<a class="anchor" href="#glue" aria-hidden="true"><span class="octicon octicon-link"></span></a>Glue</h1>
+<p>Now that we have the Ohm grammar,
+it’s time to use it to assign 
+some meaning to the parse tree 
+that it’ll generate from our 
+sample Datalog program. Ohm 
+actually already allows us to do 
+that too.</p>
+
+<p>However, Paul Tarvydas(raj: link)
+found out that he was writing a 
+lot of boilerplate code and 
+decided to ….. write another 
+DSL for it! It’s called Glue 
+(raj: link).
+CAUTION: Glue is a prototype and 
+does not cover all edge cases.</p>
+
+<p>The way Glue works is you take 
+all the symbols in your Ohm 
+grammar e.g. <code class="language-plaintext highlighter-rouge">Clause</code>, <code class="language-plaintext highlighter-rouge">ID</code> and 
+write a corresponding piece of 
+JavaScript code to be generated. 
+Glue also simplifies it in the 
+way that you can just write the 
+string of code(Python in my case)
+that you want to generate. Let’s 
+start with a dummy example.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span> <span class="err">$</span>
+<span class="o">{</span>Statement<span class="o">}</span> <span class="o">]]</span>
+</code></pre></div></div>
+<p>Here, <code class="language-plaintext highlighter-rouge">Program</code> and <code class="language-plaintext highlighter-rouge">Statement</code> 
+are from the Ohm grammar above. 
+Since we have multiple 
+statements, we use <code class="language-plaintext highlighter-rouge">@</code> to 
+indicate that. The code to be 
+generated is between <code class="language-plaintext highlighter-rouge">[[</code> and <code class="language-plaintext highlighter-rouge">]]
+</code>. And we refer to the code with 
+JavScript interpolation code <code class="language-plaintext highlighter-rouge">${}
+</code>. What is the value of 
+<code class="language-plaintext highlighter-rouge">Statement</code> above? Well, it’ll 
+be populated ‘somehow’ by Ohm 
+with the values from the rest of 
+the grammar.</p>
+
+<p>I think the above example was 
+too easy for you :) . Let’s show 
+you what I have to actually do.</p>
+
+<p>If you look at my required 
+Python Mercylog code above, I 
+need to first generate some 
+generic, wrapper like Python 
+code like <code class="language-plaintext highlighter-rouge">mercylog</code> import 
+statements and initialization no 
+matter what the Datalog code is 
+to be generated.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+from mercylog import R, V, and_, db
+fb <span class="o">=</span> <span class="o">[</span> .. statements ..] <span class="c"># refer to facts_rules_query above </span>
+ds <span class="o">=</span> db<span class="o">()</span> 
+result <span class="o">=</span> ds<span class="o">(</span>fb<span class="o">)</span>
+print<span class="o">(</span>result.df<span class="o">())</span> 
+</code></pre></div></div>
+<p>The way we specify that in Glue 
+is(I’m intentionally )</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span>from mercylog import R, V, and_, db<span class="se">\n</span>fb <span class="o">=</span> <span class="se">\[</span> <span class="k">${</span><span class="nv">Statement</span><span class="k">}</span><span class="se">\]</span> <span class="se">\n</span>ds <span class="o">=</span> db<span class="o">()</span> <span class="se">\n</span>result <span class="o">=</span> ds<span class="o">(</span>fb<span class="o">)</span> <span class="se">\n</span>print<span class="o">(</span>result.df<span class="o">())</span> <span class="o">]]</span>
+</code></pre></div></div>
+
+<p>It may not look very clean and 
+Paul may have some way to make 
+improve on this but I just 
+wanted to give you an idea.</p>
+
+<p>We need to escape special 
+characters in Glue. For e.g., I 
+have to use <code class="language-plaintext highlighter-rouge">[]</code> for Python but 
+that means something in Glue too 
+so I have to escape it e.g. <code class="language-plaintext highlighter-rouge">\[</code></p>
+
+<p>Where do we get statements from? 
+Well, there was something I 
+didn’t mention before, that it’s 
+time to talk about now. Notice 
+the <code class="language-plaintext highlighter-rouge">-- rule</code> and <code class="language-plaintext highlighter-rouge">-- fact</code> in 
+our Ohm grammar?</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Statement <span class="o">=</span>
+    Clause <span class="s2">"."</span>                          <span class="nt">--</span> fact
+  | Clause <span class="s2">":-"</span> Clause CommaClause<span class="k">*</span> <span class="s2">"."</span> <span class="nt">--</span> rule
+
+</code></pre></div></div>
+<p>They look like comments  but 
+they are called <code class="language-plaintext highlighter-rouge">case labels</code> 
+in Ohm. They are a way to specify different execution paths for Glue
+(actually, for Ohm, which Glue 
+uses underneath). So we have two 
+entries in Glue for Statement, 
+<code class="language-plaintext highlighter-rouge">Statement_fact</code> and <code class="language-plaintext highlighter-rouge">Statement_rule</code></p>
+
+<p>Note, that the number of 
+parameters for e.g.
+<code class="language-plaintext highlighter-rouge">Statement_fact</code> match closely 
+with how it’s grammar is 
+specified. Using <code class="language-plaintext highlighter-rouge">k</code> in 
+<code class="language-plaintext highlighter-rouge">kperiod</code> is just a convention, 
+I think, to indicate that it’s a 
+literal unlike the others.</p>
+
+<p>If 
+it’s a fact, I just have to add 
+it to the list <code class="language-plaintext highlighter-rouge">fb</code>. The code 
+containing <code class="language-plaintext highlighter-rouge">fb</code> 
+is generated above for <code class="language-plaintext highlighter-rouge">Program 
+[@statement]</code>. So I take 
+<code class="language-plaintext highlighter-rouge">clause</code> which will be generated 
+later and just add a <code class="language-plaintext highlighter-rouge">,</code> to it. 
+For rules, I have to convert 
+<code class="language-plaintext highlighter-rouge">Statement_rule</code> to the 
+corresponding <code class="language-plaintext highlighter-rouge">mercylog 
+statement</code> i.e. <code class="language-plaintext highlighter-rouge">clause1 &lt;&lt; and_
+(...)</code></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Statement_fact <span class="o">[</span>clause kperiod] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause</span><span class="k">}</span>,<span class="se">\n</span><span class="o">]]</span>
+Statement_rule <span class="o">[</span>clause1 kcolondash clause @commaclause kdot] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause1</span><span class="k">}</span> <span class="o">&lt;&lt;</span> <span class="no">and_</span><span class="sh">(</span><span class="k">${</span><span class="nv">clause</span><span class="k">}${</span><span class="nv">commaclause</span><span class="k">}</span><span class="sh">),</span><span class="se">\n</span><span class="sh">]]
+
+</span></code></pre></div></div>
+<p>I think the rest of the code 
+follows the same principles 
+explained above.</p>
+
+<p>Here’s the final Glue Code.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span>from mercylog import R, V, and_, db<span class="se">\n</span>fb <span class="o">=</span> <span class="se">\[</span> <span class="k">${</span><span class="nv">Statement</span><span class="k">}</span><span class="se">\]</span> <span class="se">\n</span>ds <span class="o">=</span> db<span class="o">()</span> <span class="se">\n</span>result <span class="o">=</span> ds<span class="o">(</span>fb<span class="o">)</span> <span class="se">\n</span>print<span class="o">(</span>result.df<span class="o">())</span> <span class="o">]]</span>
+Statement_fact <span class="o">[</span>clause kperiod] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause</span><span class="k">}</span>,<span class="se">\n</span><span class="o">]]</span>
+Statement_rule <span class="o">[</span>clause1 kcolondash clause @commaclause kdot] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause1</span><span class="k">}</span> <span class="o">&lt;&lt;</span> <span class="no">and_</span><span class="sh">(</span><span class="k">${</span><span class="nv">clause</span><span class="k">}${</span><span class="nv">commaclause</span><span class="k">}</span><span class="sh">),</span><span class="se">\n</span><span class="sh">]]
+
+Clause [predicate klpar idlist krpar] = [[</span><span class="k">${</span><span class="nv">predicate</span><span class="k">}</span><span class="sh">(</span><span class="k">${</span><span class="nv">idlist</span><span class="k">}</span><span class="sh">)]]
+
+CommaClause [kcomma clause] = [[</span><span class="se">\,</span><span class="k">${</span><span class="nv">clause</span><span class="k">}</span><span class="sh">]]
+
+Relation [lowercaseident] = [[R.</span><span class="k">${</span><span class="nv">lowercaseident</span><span class="k">}</span><span class="sh">]]
+IDList [id @commaid] = [[</span><span class="k">${</span><span class="nv">id</span><span class="k">}${</span><span class="nv">commaid</span><span class="k">}</span><span class="sh">]]
+
+ID [id] = [[</span><span class="k">${</span><span class="nv">id</span><span class="k">}</span><span class="sh">]]
+CommaID [kcomma id] = [[</span><span class="se">\,</span><span class="sh"> </span><span class="k">${</span><span class="nv">id</span><span class="k">}</span><span class="sh">]]
+
+Variable [capident] = [[V.</span><span class="k">${</span><span class="nv">capident</span><span class="k">}</span><span class="sh">]]
+Literal [lowercaseident] = [["</span><span class="k">${</span><span class="nv">lowercaseident</span><span class="k">}</span><span class="sh">"]]
+
+LowerCaseIdent [c @cs] = [[</span><span class="k">${</span><span class="nv">c</span><span class="k">}${</span><span class="nv">cs</span><span class="k">}</span><span class="sh">]]
+
+CapitalizedIdent [c @cs] = [[</span><span class="k">${</span><span class="nv">c</span><span class="k">}${</span><span class="nv">cs</span><span class="k">}</span><span class="sh">]]
+
+identRest [c] = [[</span><span class="k">${</span><span class="nv">c</span><span class="k">}</span><span class="sh">]]
+</span></code></pre></div></div>
+
+<h1 id="code-generation">
+<a class="anchor" href="#code-generation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code Generation</h1>
+<p>So we have the Ohm and Glue 
+grammars. We can now take a 
+Datalog program and generate 
+Python code.
+Using the <code class="language-plaintext highlighter-rouge">pfr</code> tool (raj: link) 
+which reads an Ohm, Glue file 
+and input source language file,
+we can generate the Python code.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pfr test.datalog datalog.ohm mercylog.glue <span class="o">&gt;</span> test.py 
+
+</code></pre></div></div>
+
+<p>That generates</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">mercylog</span> <span class="kn">import</span> <span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">db</span>
+<span class="n">fb</span> <span class="o">=</span> <span class="p">[</span> <span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="s">"abe"</span><span class="p">,</span> <span class="s">"bob"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="s">"abby"</span><span class="p">,</span> <span class="s">"bob"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="s">"bob"</span><span class="p">,</span> <span class="s">"carl"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="s">"bob"</span><span class="p">,</span> <span class="s">"connor"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="s">"beatrice"</span><span class="p">,</span> <span class="s">"carl"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">man</span><span class="p">(</span><span class="s">"abe"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">man</span><span class="p">(</span><span class="s">"bob"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">woman</span><span class="p">(</span><span class="s">"abby"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">woman</span><span class="p">(</span><span class="s">"beatrice"</span><span class="p">),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">father</span><span class="p">(</span><span class="n">V</span><span class="p">.</span><span class="n">X</span><span class="p">,</span> <span class="n">V</span><span class="p">.</span><span class="n">Y</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">and_</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="n">man</span><span class="p">(</span><span class="n">V</span><span class="p">.</span><span class="n">X</span><span class="p">),</span><span class="n">R</span><span class="p">.</span><span class="n">parent</span><span class="p">(</span><span class="n">V</span><span class="p">.</span><span class="n">X</span><span class="p">,</span> <span class="n">V</span><span class="p">.</span><span class="n">Y</span><span class="p">)),</span>
+<span class="n">R</span><span class="p">.</span><span class="n">father</span><span class="p">(</span><span class="n">V</span><span class="p">.</span><span class="n">X</span><span class="p">,</span> <span class="n">V</span><span class="p">.</span><span class="n">Y</span><span class="p">),</span>
+<span class="p">]</span> 
+<span class="n">ds</span> <span class="o">=</span> <span class="n">db</span><span class="p">()</span> 
+<span class="n">result</span> <span class="o">=</span> <span class="n">ds</span><span class="p">(</span><span class="n">fb</span><span class="p">)</span> 
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">df</span><span class="p">())</span> 
+
+</code></pre></div></div>
+
+<p>Not that it’s not indented 
+properly, nor have I done any 
+optimizations. For e.g. <code class="language-plaintext highlighter-rouge">V.X</code> 
+could be refactored to <code class="language-plaintext highlighter-rouge">X=V.X</code> 
+like in the Python code showed 
+in the very beginning. But 
+that’s another exercise.</p>
+
+<p>Now to test my code, I have to 
+create a project with <code class="language-plaintext highlighter-rouge">mercylog</code> 
+in my dependencies and then do</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python test.py
+
+</code></pre></div></div>
+<p>and I’ll see</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>      Y    X
+0  connor  bob
+1     bob  abe
+2    carl  bob
+</code></pre></div></div>
+
+<h1 id="summary">
+<a class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h1>
+
+<p>If you think about it, we 
+‘compiled’ a DSL(Datalog) using 
+two other DSLs(Ohm and Glue). It 
+makes you wonder, can we do 
+everything in DSLs?</p>
+
+<h1 id="extra">
+<a class="anchor" href="#extra" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extra.</h1>
+
+<ul>
+  <li>Ohm has a built-in to express a List of tokens e.g. <code class="language-plaintext highlighter-rouge">IDList = ID CommaID*</code> above. (raj: find Ohm built-in). The reason we don’t use it is because <code class="language-plaintext highlighter-rouge">Glue</code> does not support it. The side benefit is that I can show you the foundation blocks of PEG.</li>
+</ul>
+
+  </div><a class="u-url" href="/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/myblog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/myblog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/myblog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>An easy to use blogging platform with support for Jupyter Notebooks.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/myblog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/myblog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
