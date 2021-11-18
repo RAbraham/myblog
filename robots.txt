@@ -1,1 +1,1 @@
-Sitemap: https://rajivabraham.com/myblog/sitemap.xml
+Sitemap: /myblog/sitemap.xml
