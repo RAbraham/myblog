@@ -100,10 +100,10 @@ window.onload = wrap_img;
 <li class="toc-entry toc-h1"><a href="#compiling">Compiling</a>
 <ul>
 <li class="toc-entry toc-h2"><a href="#creating-a-parse-tree">Creating a Parse Tree</a></li>
+<li class="toc-entry toc-h2"><a href="#glue">Glue</a></li>
+<li class="toc-entry toc-h2"><a href="#code-generation">Code Generation</a></li>
 </ul>
 </li>
-<li class="toc-entry toc-h1"><a href="#glue">Glue</a></li>
-<li class="toc-entry toc-h1"><a href="#code-generation">Code Generation</a></li>
 <li class="toc-entry toc-h1"><a href="#the-end">The End</a></li>
 <li class="toc-entry toc-h1"><a href="#extra">Extra.</a></li>
 </ul><h1 id="objective">
@@ -422,8 +422,8 @@ identRest <span class="o">=</span> <span class="s2">"0-9"</span> | <span class="
 <span class="o">}</span>
 </code></pre></div></div>
 
-<h1 id="glue">
-<a class="anchor" href="#glue" aria-hidden="true"><span class="octicon octicon-link"></span></a>Glue</h1>
+<h2 id="glue">
+<a class="anchor" href="#glue" aria-hidden="true"><span class="octicon octicon-link"></span></a>Glue</h2>
 <p>Now that we have the Ohm grammar,
 it’s time to use it to assign 
 some meaning to the parse tree 
@@ -577,8 +577,8 @@ CapitalizedIdent [c @cs] = [[</span><span class="k">${</span><span class="nv">c<
 identRest [c] = [[</span><span class="k">${</span><span class="nv">c</span><span class="k">}</span><span class="sh">]]
 </span></code></pre></div></div>
 
-<h1 id="code-generation">
-<a class="anchor" href="#code-generation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code Generation</h1>
+<h2 id="code-generation">
+<a class="anchor" href="#code-generation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code Generation</h2>
 <p>So we have the Ohm and Glue 
 grammars. We can now take a 
 Datalog program and generate 
