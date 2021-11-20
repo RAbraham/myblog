@@ -77,7 +77,7 @@ window.onload = wrap_img;
        • <span class="read-time" title="Estimated read time">
     
     
-      13 min read
+      14 min read
     
 </span></p>
 
@@ -104,28 +104,50 @@ window.onload = wrap_img;
 </li>
 <li class="toc-entry toc-h1"><a href="#glue">Glue</a></li>
 <li class="toc-entry toc-h1"><a href="#code-generation">Code Generation</a></li>
-<li class="toc-entry toc-h1"><a href="#summary">Summary</a></li>
+<li class="toc-entry toc-h1"><a href="#the-end">The End</a></li>
 <li class="toc-entry toc-h1"><a href="#extra">Extra.</a></li>
 </ul><h1 id="objective">
 <a class="anchor" href="#objective" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objective</h1>
-<p>This post shows you how to create a toy Datalog, a laughably incomplete subset of the Datalog language, using an Ohm parser for syntax and a Glue parser for the semantics. The final output is a Python program.</p>
+<p>This post shows you how to create a toy Datalog, a laughably incomplete subset of the Datalog language, using an Ohm parser for the syntax and a Glue parser for the semantics. The final output is a Python program.</p>
 
 <h1 id="motivation">
 <a class="anchor" href="#motivation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Motivation</h1>
-<p>I think the time has come for me to explore creating domain specific languages(DSLs)(raj: link) to build software systems. I feel the benefits are:</p>
+<p>I think the time has come for me 
+to explore creating <a href="https://en.wikipedia.org/wiki/Domain-specific_language">domain 
+specific languages</a>(DSL) to build software systems. I feel the benefits are:</p>
 <ul>
-  <li>write less code. I hope to generate the required code from the DSL code</li>
-  <li>write executable code in that DSL that looks very similar to what an end user/domain expert would understand. Almost like writing English with some structure so that it can be executed. This will allow us to have great communication with domain experts/end users very early in the project preventing miscommunication errors.</li>
-  <li>Capture the business rules/business workflows at the level of the DSLs. This will allow me to easily change the implementation underneath without having to change the DSL code that captures the complex business logic. (raj: give example and elaborate)</li>
+  <li>
+<strong>write less code</strong>. I hope to generate the required code from the DSL code.</li>
+  <li>
+<strong>write code readable by domain experts</strong>. I hope to write executable code in that DSL that looks very similar to what an end user/domain expert would understand. Almost like writing English with some structure so that it can be executed. This enables fruitful and rapid interaction with domain experts/end users very early in the project preventing miscommunication errors.</li>
+  <li>
+<strong>decouple business logic from implementation</strong>. I hope to capture the business
+rules/business workflows at the
+level of the DSLs. This will
+allow me to easily change the
+implementation underneath
+without having to change the  DSL
+ code that captures the  complex
+ business logic.  For e.g. I
+ might initially generate simple
+ Python code from my DSL but
+ later I may generate performant
+ code using multiprocessing
+ libraries or even SQL code, all
+ without changing my code written
+in the DSL. I just change the
+compiler.</li>
 </ul>
 
-<p>I hope to write a bigger post later explaining why I think DSLs are something worth exploring(raj: link to dsl motivation post when ready)</p>
+<p>I hope to write a bigger post
+later explaining why I think DSLs
+ are something worth exploring
+ (ask me if you are interested.)</p>
 
 <h1 id="problem-statement">
 <a class="anchor" href="#problem-statement" aria-hidden="true"><span class="octicon octicon-link"></span></a>Problem Statement</h1>
 <p>I have a library in Python, 
-called <code class="language-plaintext highlighter-rouge">mercylog</code>(raj: link) 
-that is like Datalog. In this 
+called <a href="https://github%0A.com/RAbraham/mercylog">mercylog</a> that is like Datalog. In this
 post, I want to take actual 
 Datalog code and compile it to 
 Python code which has <code class="language-plaintext highlighter-rouge">mercylog</code> 
@@ -177,7 +199,14 @@ what that means.</p>
 <span class="n">abe</span>   <span class="n">bob</span>  
 </code></pre></div></div>
 
-<p>Now, I really like a language called Datalog(raj: link to datalog wiki and your article explaining Datalog). It’s an alternative to SQL. I even wrote a prototype Python library named mercylog(raj: link to mercylog) to be able to execute Datalog like programs in Python.</p>
+<p>Now, I really like a language
+called <a href="https://en%0A.wikipedia.org/wiki/Datalog">Datalog</a>. I
+have written an outdated but
+still understandable post here
+(raj: I’ll post a link soon). It’s an
+alternative to SQL. I even wrote
+a prototype Python library named
+<a href="https://github%0A.com/RAbraham/mercylog">mercylog</a> to be able to execute Datalog like programs in Python.</p>
 
 <p>Let’s translate the above SQL to a simple variant of Datalog.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>parent(abe, bob).
@@ -199,9 +228,16 @@ bob   connor
 abe   bob  
 </code></pre></div></div>
 
-<p>In Datalog, rows in a table are called facts. <code class="language-plaintext highlighter-rouge">X</code> and <code class="language-plaintext highlighter-rouge">Y</code> are special logic variables which are different from our regular Python variables(check raj: your introductory Datalog post).   <code class="language-plaintext highlighter-rouge">parent</code>, <code class="language-plaintext highlighter-rouge">man</code>, <code class="language-plaintext highlighter-rouge">woman</code> are called <code class="language-plaintext highlighter-rouge">relation</code>s just as in regular databases. Code is written as <code class="language-plaintext highlighter-rouge">rule</code>s. You can read the rule above as ‘X is a father of Y if X is man and X is the parent of Y’. The query is find me father and child combinations i.e. <code class="language-plaintext highlighter-rouge">father(X, Y)</code></p>
+<p>In Datalog, rows in a table are
+called facts. <code class="language-plaintext highlighter-rouge">X</code> and <code class="language-plaintext highlighter-rouge">Y</code> are
+special logic variables which are
+ different from our regular
+ Python variables. They are only relevant within a statement and are used to link data across relations. e.g. <code class="language-plaintext highlighter-rouge">X</code> signifies the same person in <code class="language-plaintext highlighter-rouge">father</code>, <code class="language-plaintext highlighter-rouge">man</code> and <code class="language-plaintext highlighter-rouge">parent</code> in the single rule above. (raj: I’ll post a link soon to explain more).   <code class="language-plaintext highlighter-rouge">parent</code>, <code class="language-plaintext highlighter-rouge">man</code>, <code class="language-plaintext highlighter-rouge">woman</code> are called <code class="language-plaintext highlighter-rouge">relation</code>s just as in regular databases. Code is written as <code class="language-plaintext highlighter-rouge">rule</code>s. You can read the rule above as ‘X is a father of Y if X is man and X is the parent of Y’. The query is to find me all father and child combinations i.e. <code class="language-plaintext highlighter-rouge">father(X, Y)</code></p>
 
-<p>Note the schema creation step and explicit columns names(i.e. <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">child</code> for <code class="language-plaintext highlighter-rouge">parent</code>) are missing in this simplistic example of a Datalog variant(there are many of them). This is not saying that oh look, Datalog has so less code than SQL so it’s better. In fact the opposite, I want explicit schema creation etc. in Datalog but that’s another project(or checkout logica. raj: link to logica).</p>
+<p>Note the schema creation step and
+ explicit columns names(i.e.
+ <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">child</code> for <code class="language-plaintext highlighter-rouge">parent</code>)
+ are missing in this simplistic example of a Datalog variant(there are many of them). This is not saying that oh look, Datalog has so less code than SQL so it’s better. In fact the opposite, I want explicit schema creation etc. in Datalog but that’s another project.</p>
 
 <p>Now, I have a prototype Python library called <code class="language-plaintext highlighter-rouge">mercylog</code>. Similar code there would be</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">mercylog</span> <span class="kn">import</span> <span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">db</span>
@@ -248,19 +284,39 @@ abe   bob
 <p>The two ‘simple’ stages of 
 creating a compiler are:</p>
 
-<p>a) Creating a Parse Tree: writing a grammar to take raw text and convert that into a parse tree(raj: https://en.wikipedia.org/wiki/Parse_tree).
-(raj: Also put a picture of parse tree maybe even the one from https://en.wikipedia.org/wiki/Parse_tree, directly in the post). For this, we will use Ohm(raj: link)</p>
+<p>a) <strong>Creating a Parse Tree</strong>: writing
+ a grammar to take raw text and
+ convert that into a <a href="https://en%0A%20.wikipedia.org/wiki/Parse_tree">parse
+ tree</a>.</p>
 
-<p>b) Assigning Semantics to Parse Tree: Taking the parse tree from the above phase and assigning some meaning to it. i.e. generating code that executes. In our case, we’ll be generating Python code. We could use Ohm for this too but I’ll use a tool called Glue(raj: link) created by Paul Tarvydas</p>
+<p>For e.g., if the raw text is the
+  mathematical expression <code class="language-plaintext highlighter-rouge">(2+x)^(3-y)</code>, the corresponding parse
+   tree would be below.</p>
+
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/RPN-ParseTree-1.svg/320px-RPN-ParseTree-1.svg.png" alt="Parse Tree"></p>
+
+<p>For this, we will use <a href="https://github.com/harc/ohm">Ohm</a></p>
+
+<p>b) <strong>Assigning Semantics to Parse
+Tree</strong>: Taking the parse tree from
+the above phase and assigning
+some meaning to it. i.e.
+generating code that executes. In
+ our case, we’ll be generating
+ Python code. We could use Ohm
+ for this too but I’ll use a DSL called Glue in the project <a href="https://github.com/guitarvydas/parse">parse</a> created by Paul Tarvydas.</p>
 
 <p>NOTE: Glue is very very much a prototype. It can fail across many edge cases. If this interests you, Paul is looking for programmers who can help him build out his vision.</p>
 
 <h2 id="creating-a-parse-tree">
 <a class="anchor" href="#creating-a-parse-tree" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating a Parse Tree</h2>
 
-<p>Alright, time for the meat. We build the grammar for our toy Datalog. Ohm has an excellent grammar editor(raj: link ohm editor) which allows one to write a grammar, test it with examples and see the ‘concrete syntax tree’ i.e. how a concrete example of Datalog code breaks out into a parse tree.</p>
+<p>Alright, time to dive in. We build the grammar for our toy Datalog. Ohm has
+ an excellent <a href="https://ohmlang.github.io/editor/">grammar editor</a> which allows
+  one to
+ write a grammar, test it with examples and see the ‘concrete syntax tree’ i.e. how a concrete example of Datalog code breaks out into a parse tree.</p>
 
-<p>(raj: Screenshot of Ohm Editor)</p>
+<p><img src="/myblog/images/ohm-editor-datalog.png" alt="Ohm Editor"></p>
 
 <p>Let’s start with the smallest Ohm grammar</p>
 
@@ -269,17 +325,17 @@ creating a compiler are:</p>
 <span class="o">}</span>
 </code></pre></div></div>
 <p>This is just saying that my 
-Datalog code is a <code class="language-plaintext highlighter-rouge">Program</code> with one or more ‘Statement’s. The <code class="language-plaintext highlighter-rouge">+</code> indicates one or more.</p>
+Datalog code is a <code class="language-plaintext highlighter-rouge">Program</code> with one or more <code class="language-plaintext highlighter-rouge">Statement</code>s. The <code class="language-plaintext highlighter-rouge">+</code> indicates one or more.</p>
 
 <p>What’s a <code class="language-plaintext highlighter-rouge">Statement</code>? Well, in 
 the simplest case, we have a 
 fact, e.g. <code class="language-plaintext highlighter-rouge">parent(abe, bob).</code> and 
 then we have a rule e.g. <code class="language-plaintext highlighter-rouge">father
 (X, Y) :- man(X), parent(X, Y).</code>.
-I see a sub pattern as <code class="language-plaintext highlighter-rouge">relation
+I see a sub pattern there as <code class="language-plaintext highlighter-rouge">relation
 (Variable1, Variable2)</code>. I’ll 
 call this a 
-<code class="language-plaintext highlighter-rouge">Clause</code> and then I’ll worry later what’s in it. So the rule becomes <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause.</code> or even <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause, Clause..</code>. We have to capture the pattern <code class="language-plaintext highlighter-rouge">, Clause</code> 0 or many times. The way we do it in Ohm is like this.</p>
+<code class="language-plaintext highlighter-rouge">Clause</code> and then I’ll worry later how to parse it. So the rule becomes <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause.</code> or even <code class="language-plaintext highlighter-rouge">Clause :- Clause, Clause, Clause..</code>. We have to capture the pattern <code class="language-plaintext highlighter-rouge">, Clause</code> 0 or many times. The way we do it in Ohm is like this.</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Statement <span class="o">=</span>
     Clause <span class="s2">"."</span>                          <span class="nt">--</span> fact
@@ -287,19 +343,18 @@ call this a
 
 CommaClause <span class="o">=</span> <span class="s2">","</span> Clause
 </code></pre></div></div>
-<p>(raj: explain if – is a comment 
-for now?)
-(raj: Excalibur drawing?)</p>
+
+<p><code class="language-plaintext highlighter-rouge">-- fact</code> and <code class="language-plaintext highlighter-rouge">-- rule</code>  look like comments but they are more than that. I’ll explain later below.</p>
 
 <p>Cool, what’s a Clause? It’s like <code class="language-plaintext highlighter-rouge">relation(Variable1, Variable2,..,VariableN)</code>. I’m going to worry about the ‘variable’ number of variables later. For now, I’ll call it</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Clause <span class="o">=</span> Relation <span class="s2">"("</span> IDList <span class="s2">")"</span>
 </code></pre></div></div>
 
-<p>Ok, What’s <code class="language-plaintext highlighter-rouge">Relation</code>? It’s a 
+<p>Ok, What’s a <code class="language-plaintext highlighter-rouge">Relation</code>? It’s a 
 lower case string e.g. <code class="language-plaintext highlighter-rouge">father</code> 
 and it has to start with a lower 
-case letter(Datalog Convention). We 
+case letter(a Datalog convention). We 
 need to capture single letter 
 relations e.g <code class="language-plaintext highlighter-rouge">a</code> in <code class="language-plaintext highlighter-rouge">a(X,Y)</code> or 
 bigger relations e.g. <code class="language-plaintext highlighter-rouge">father</code></p>
@@ -377,13 +432,13 @@ sample Datalog program. Ohm
 actually already allows us to do 
 that too.</p>
 
-<p>However, Paul Tarvydas(raj: link)
-found out that he was writing a 
+<p>However, <a href="https://guitarvydas.github.io/">Paul Tarvydas</a>
+found that he was writing a
 lot of boilerplate code and 
 decided to ….. write another 
-DSL for it! It’s called Glue 
-(raj: link).
-CAUTION: Glue is a prototype and 
+DSL for it! It’s called Glue.</p>
+
+<p>CAUTION: Glue is a prototype and
 does not cover all edge cases.</p>
 
 <p>The way Glue works is you take 
@@ -396,8 +451,7 @@ way that you can just write the
 string of code(Python in my case)
 that you want to generate. Let’s 
 start with a dummy example.</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span> <span class="err">$</span>
-<span class="o">{</span>Statement<span class="o">}</span> <span class="o">]]</span>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span> <span class="k">${</span><span class="nv">Statement</span><span class="k">}</span> <span class="o">]]</span>
 </code></pre></div></div>
 <p>Here, <code class="language-plaintext highlighter-rouge">Program</code> and <code class="language-plaintext highlighter-rouge">Statement</code> 
 are from the Ohm grammar above. 
@@ -433,14 +487,13 @@ ds <span class="o">=</span> db<span class="o">()</span>
 result <span class="o">=</span> ds<span class="o">(</span>fb<span class="o">)</span>
 print<span class="o">(</span>result.df<span class="o">())</span> 
 </code></pre></div></div>
+
 <p>The way we specify that in Glue 
-is(I’m intentionally )</p>
+is:</p>
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Program <span class="o">[</span>@Statement] <span class="o">=</span> <span class="o">[[</span>from mercylog import R, V, and_, db<span class="se">\n</span>fb <span class="o">=</span> <span class="se">\[</span> <span class="k">${</span><span class="nv">Statement</span><span class="k">}</span><span class="se">\]</span> <span class="se">\n</span>ds <span class="o">=</span> db<span class="o">()</span> <span class="se">\n</span>result <span class="o">=</span> ds<span class="o">(</span>fb<span class="o">)</span> <span class="se">\n</span>print<span class="o">(</span>result.df<span class="o">())</span> <span class="o">]]</span>
 </code></pre></div></div>
-
-<p>It may not look very clean and 
-Paul may have some way to make 
-improve on this but I just 
+<p>It may not look very clean and
+Paul may have some way to improve on this but I just 
 wanted to give you an idea.</p>
 
 <p>We need to escape special 
@@ -484,12 +537,11 @@ containing <code class="language-plaintext highlighter-rouge">fb</code>
 is generated above for <code class="language-plaintext highlighter-rouge">Program 
 [@statement]</code>. So I take 
 <code class="language-plaintext highlighter-rouge">clause</code> which will be generated 
-later and just add a <code class="language-plaintext highlighter-rouge">,</code> to it. 
+later and just add a <code class="language-plaintext highlighter-rouge">,</code> to it, as I’m adding it to a Python list which wants a comma between list elements. 
 For rules, I have to convert 
 <code class="language-plaintext highlighter-rouge">Statement_rule</code> to the 
 corresponding <code class="language-plaintext highlighter-rouge">mercylog 
-statement</code> i.e. <code class="language-plaintext highlighter-rouge">clause1 &lt;&lt; and_
-(...)</code></p>
+statement</code> i.e. <code class="language-plaintext highlighter-rouge">clause1 &lt;&lt; and_(...)</code></p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Statement_fact <span class="o">[</span>clause kperiod] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause</span><span class="k">}</span>,<span class="se">\n</span><span class="o">]]</span>
 Statement_rule <span class="o">[</span>clause1 kcolondash clause @commaclause kdot] <span class="o">=</span> <span class="o">[[</span><span class="k">${</span><span class="nv">clause1</span><span class="k">}</span> <span class="o">&lt;&lt;</span> <span class="no">and_</span><span class="sh">(</span><span class="k">${</span><span class="nv">clause</span><span class="k">}${</span><span class="nv">commaclause</span><span class="k">}</span><span class="sh">),</span><span class="se">\n</span><span class="sh">]]
@@ -531,14 +583,15 @@ identRest [c] = [[</span><span class="k">${</span><span class="nv">c</span><span
 grammars. We can now take a 
 Datalog program and generate 
 Python code.
-Using the <code class="language-plaintext highlighter-rouge">pfr</code> tool (raj: link) 
-which reads an Ohm, Glue file 
+Using the <code class="language-plaintext highlighter-rouge">pfr</code> tool in the repo <a href="https://github.com/guitarvydas/parse">parse</a> tool
+which reads an Ohm, Glue file
 and input source language file,
 we can generate the Python code.</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pfr test.datalog datalog.ohm mercylog.glue <span class="o">&gt;</span> test.py 
 
 </code></pre></div></div>
+<p>NOTE: I had to hack the code above a bit to make it work for me but Paul may have updated his repo to make it work seamlessly for all. The emphasis here is not on having production ready tools but to rapidly explore ideas in DSL building and get feedback.</p>
 
 <p>That generates</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">mercylog</span> <span class="kn">import</span> <span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">db</span>
@@ -582,20 +635,28 @@ in my dependencies and then do</p>
 2    carl  bob
 </code></pre></div></div>
 
-<h1 id="summary">
-<a class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h1>
+<h1 id="the-end">
+<a class="anchor" href="#the-end" aria-hidden="true"><span class="octicon octicon-link"></span></a>The End</h1>
 
-<p>If you think about it, we 
+<p>There you go! a first stab at making DSLs. I hope you liked it. If you think about it, we 
 ‘compiled’ a DSL(Datalog) using 
 two other DSLs(Ohm and Glue). It 
 makes you wonder, can we do 
 everything in DSLs?</p>
 
+<p>I would like to thank <a href="https://guitarvydas.github.io/">Paul Tarvydas</a> for his excellent support while I figured it out. Please do check his blog and ideas.</p>
+
 <h1 id="extra">
 <a class="anchor" href="#extra" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extra.</h1>
 
 <ul>
-  <li>Ohm has a built-in to express a List of tokens e.g. <code class="language-plaintext highlighter-rouge">IDList = ID CommaID*</code> above. (raj: find Ohm built-in). The reason we don’t use it is because <code class="language-plaintext highlighter-rouge">Glue</code> does not support it. The side benefit is that I can show you the foundation blocks of PEG.</li>
+  <li>
+    <p>Ohm has a built-in to express a List of tokens, e.g. <code class="language-plaintext highlighter-rouge">IDList = ID CommaID*</code> above can be written as <code class="language-plaintext highlighter-rouge">IDList = ListOf&lt;ID, ","&gt;</code>. The reason we don’t use it is because <code class="language-plaintext highlighter-rouge">Glue</code> does not support it. The side benefit is that I can show you the foundation blocks of PEG, the grammar language used by Ohm.</p>
+  </li>
+  <li>
+    <p>A great Datalog variant with
+explicit column names is <a href="https://github.com/EvgSkv/logica">Logica</a></p>
+  </li>
 </ul>
 
   </div><a class="u-url" href="/myblog/markdown/2021/10/29/dsl-datalog-ohm-glue.html" hidden></a>
