@@ -330,7 +330,7 @@ identRest = "0-9" | "_" | "A" .. "Z" | "a" .. "z"
 }
 ```
 
-# Glue
+## Glue
 Now that we have the Ohm grammar,
 it's time to use it to assign 
 some meaning to the parse tree 
@@ -491,7 +491,7 @@ CapitalizedIdent [c @cs] = [[${c}${cs}]]
 identRest [c] = [[${c}]]
 ```
 
-# Code Generation
+## Code Generation
 So we have the Ohm and Glue 
 grammars. We can now take a 
 Datalog program and generate 
