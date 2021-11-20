@@ -1,9 +1,9 @@
 ---
 toc: true
 layout: post
-description: A toy Datalog interpreter using Ohm interpreter and Glue.
+description: A toy Datalog parser using Ohm parser and Glue.
 categories: [markdown]
-title: A toy Datalog interpreter using Ohm and Glue. 
+title: A toy Datalog parser using Ohm and Glue. 
 ---
 
 # Objective
