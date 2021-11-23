@@ -135,7 +135,7 @@ special logic variables which are
 Note the schema creation step and
  explicit columns names(i.e.
  `name`, `child` for `parent`)
- are missing in this simplistic example of a Datalog variant(there are many of them). This is not saying that oh look, Datalog has so less code than SQL so it's better. In fact the opposite, I want explicit schema creation etc. in Datalog but that's another project.
+ are missing in this simplistic example of a Datalog variant(there are many of them). This is not saying that oh look, Datalog has so much less code than SQL so it's better. In fact the opposite, I want explicit schema creation etc. in Datalog but that's another project.
 
 
 Now, I have a prototype Python library called `mercylog`. Similar code there would be
@@ -368,7 +368,7 @@ statements, we use `@` to
 indicate that. The code to be 
 generated is between `[[` and `]]
 `. And we refer to the code with 
-JavScript interpolation code `${}
+JavaScript interpolation code `${}
 `. What is the value of 
 `Statement` above? Well, it'll 
 be populated 'somehow' by Ohm 
